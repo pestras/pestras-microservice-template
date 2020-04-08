@@ -1,0 +1,8 @@
+.git/
+node_modules/
+.gitignore
+npm-debug
+*.ts
+*.js.map
+test
+tsconfig

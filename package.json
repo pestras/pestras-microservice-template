@@ -1,0 +1,18 @@
+{
+  "name": "name-microservice",
+  "version": "0.0.1",
+  "description": "name microservice desc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "microservice"
+  ],
+  "author": "pestras",
+  "license": "ISC",
+  "dependencies": {
+    "@pestras/microservice": "0.0.21"
+  },
+  "devDependencies": {}
+}

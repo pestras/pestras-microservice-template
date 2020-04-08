@@ -1,0 +1,64 @@
+# Stage 1 (production base)
+# This gets production dependencies installed and out of the way
+# -----------------------------------------------------------------------------------
+FROM node:12-alpine as base
+
+# default to port 3000 for node
+ARG PORT=3000
+ENV PORT $PORT
+EXPOSE $PORT
+
+# let our node environment  defaults to production
+ENV NODE_ENV production
+
+# install dependencies first, in a different location for easier app bind mounting for local development
+# due to default /opt permissions we have to create the dir with root and change perms
+RUN mkdir /opt/node_app && chown node:node /opt/node_app
+WORKDIR /opt/node_app
+
+# npm token for private packages install
+ARG NPM_TOKEN
+
+# the official node image provides an unprivileged user as a security best practice
+# but we have to manually enable it. We put it here so npm installs dependencies 
+# using npm ci so only package-lock.json file is used as the same user who runs the app. 
+# we also cooy .npmrc to grant access to npm private packages
+# https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
+USER node
+COPY .npmrc-dev .npmrc
+COPY package.json package-lock.json* ./
+RUN npm config list && npm ci && npm cache cleen --force
+ENV PATH /opt/node_app/node_modules/.bin:$PATH
+
+# remove .npmrc file
+RUN rm -f .npmrc
+
+# check every 30s to ensure this service returns HTTP 200
+HEALTHCHECK --interval=30s CMD node ./node_modules/@pestras/microservice/hc.js
+
+# Stage 2 (development)
+# No copying in this stage instead using bind mount in docker-compose
+# -----------------------------------------------------------------------------------
+FROM base as dev
+
+# Overwrite NODE_ENV varaible to development
+ENV NODE_ENV=development
+
+# install development dependencies only since others are already installed
+RUN npm i --only=development
+
+# App directory
+WORKDIR /opt/node_app/app
+
+CMD ["node", "index.js"]
+
+# Stage 3 (production)
+# Copying source code
+# -----------------------------------------------------------------------------------
+FROM base as prod
+
+# App directory
+WORKDIR /opt/node_app/app
+
+CMD ["node", "index.js"]
+

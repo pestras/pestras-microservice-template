@@ -1,18 +1,20 @@
 {
-  "name": "name-microservice",
-  "version": "0.0.22",
-  "description": "name microservice desc",
+  "name": "microservice-name",
+  "version": "0.1.1",
+  "description": "microservice desc",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "tsc": "tsc"
   },
   "keywords": [
     "microservice"
   ],
-  "author": "pestras",
+  "author": "author",
   "license": "ISC",
   "dependencies": {
-    "@pestras/microservice": "0.0.22"
+    "@pestras/microservice": "0.1.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "typescript": "3.8.2"
+  }
 }

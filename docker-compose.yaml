@@ -3,15 +3,16 @@ services:
   service-name:
     container_name: service-name
     labels:
-      key: "value"
+      - "value"
     build: 
       context: .
       target: dev
       args: 
-        - NPM_TOKEN: your-npm-token
-        - PORT: 3000
-    ports:
-      - "3000:3000"
+        - "NPM_TOKEN=npm-token"
+        - "PORT=3000"
+    # to expose service port uncomment the two following lines
+    # ports:
+    #   - "3000:3000"
     volumes: 
       - .:/opt/node_app/app:delegated
       - /node/app/node_modules

@@ -1,6 +1,6 @@
 {
   "name": "microservice-name",
-  "version": "0.1.1",
+  "version": "0.1.7",
   "description": "microservice desc",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
   "author": "author",
   "license": "ISC",
   "dependencies": {
-    "@pestras/microservice": "0.1.1"
+    "@pestras/microservice": "0.1.7"
   },
   "devDependencies": {
     "typescript": "3.8.2"

@@ -5,8 +5,8 @@ FROM node:12-alpine as base
 
 # default to port 3000 for node
 ARG PORT=3000
-ENV PORT $PORT
-EXPOSE $PORT
+ENV PORT ${PORT}
+EXPOSE ${PORT}
 
 # let our node environment  defaults to production
 ENV NODE_ENV production
@@ -28,7 +28,7 @@ USER node
 # when using private packeges uncomment next line 
 # COPY .npmrc-dev .npmrc
 COPY package.json package-lock.json* ./
-RUN npm config list && npm ci && npm cache cleen --force
+RUN npm --only=production && npm cache cleen --force
 ENV PATH /opt/node_app/node_modules/.bin:$PATH
 
 # remove .npmrc file
@@ -36,31 +36,14 @@ ENV PATH /opt/node_app/node_modules/.bin:$PATH
 #RUN rm -f .npmrc
 
 # check every 30s to ensure this service returns HTTP 200
-HEALTHCHECK --interval=30s CMD node ./node_modules/@pestras/microservice/hc.js
-
-# Stage 2 (development)
-# No copying in this stage instead using bind mount in docker-compose
-# -----------------------------------------------------------------------------------
-FROM base as dev
-
-# Overwrite NODE_ENV varaible to development
-ENV NODE_ENV=development
-
-# install development dependencies only since others are already installed
-RUN npm i --only=development
+# uncomment for helth check
+# HEALTHCHECK --interval=30s CMD node ./node_modules/@pestras/microservice/hc.js /service-name/v0 ${PORT}
 
 # App directory
 WORKDIR /opt/node_app/app
 
-CMD ["node", "index.js"]
-
-# Stage 3 (production)
-# Copying source code
-# -----------------------------------------------------------------------------------
-FROM base as prod
-
-# App directory
-WORKDIR /opt/node_app/app
+# Copy soource
+COPY . .
 
 CMD ["node", "index.js"]
 

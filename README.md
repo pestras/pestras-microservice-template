@@ -19,6 +19,7 @@ class Test {}
 Name        | Type     | Defualt         | Description
 ----        | -----    | ------          | -----
 version     | number   | 0               | Current verion of our service, versions are used on rest resource */someservice/v1/...*.
+kebabCase   | boolean  | true            | convert class name to kebekCasing as *ArticlesQueryAPI* -> *articles-query-api*
 port        | number   | 3000            | Http server listening port.   
 host        | string   | 0.0.0.0         | Http server host.
 workers     | number   | 0               | Number of node workers to run, if assigned to minus value will take max number of workers depending on os max cpus number
@@ -28,6 +29,7 @@ nats        | string \| number \| NatsConnectionOptions | null        | see [Nat
 exitOnUnhandledException | boolean | true |
 socket | SocketIOOptions | null |
 authTimeout | number | 15000 | auth method timeout
+cors | IncomingHttpHeaders & { 'success-code'?: string } | [see cors](#cors) | CORS for preflights requests
 
 #### LOGLEVEL Enum
 
@@ -45,6 +47,30 @@ Name | Type | default | Description
 serverOptions | SocketIO.ServerOptions | null | see [socket.io docs](https://socket.io/docs/server-api/)
 maxListeners  | number  | 10 |
 adapter | any | null | SocketIO Adapter
+
+### Cors
+
+**PM** default cors options are:
+
+```
+'access-control-allow-methods': "GET,HEAD,PUT,PATCH,POST,DELETE",
+'access-control-allow-origin': "*",
+'Access-Control-Allow-Credentials': 'false',
+'success-code': '204'
+```
+
+To change that, overwrite new values into cors options
+
+```ts
+@SERVICE({
+  version: 1,
+  cors: {
+    'access-control-allow-methods': "GET,PUT,POST,DELETE",
+    'content-type': 'application/json'
+  }
+})
+class Test {}
+```
 
 ## Micro
 
@@ -87,7 +113,7 @@ Name | type | Default | Description
 name | string | Method name applied to | name of the route
 path | string | '' | Service path pattern
 method | HttpMethod | 'GET' | 
-requestType | string | 'application/json | Same as 'Content-Type' header
+accepts | string | 'application/json | shortcut for 'Content-Type' header
 validate | (req: Request, res: Response) => boolean \| Promise\<boolean\> | null | validation method
 bodyQuota | number | 1024 * 100 | Request body size limit
 queryLength | number | 100 | Request query characters length limit
@@ -147,22 +173,10 @@ url | URL | URL extends Node URL class with some few properties, most used one i
 params | { [key: string]: string } | includes route path params values.
 body | any |
 auth | any | useful to save some auth value.
-get | (key: string) => string | method to get specific request header value
+headers | IncomingHttpHeaders | return all current request headers.
+header | (key: string) => string | method to get specific request header value
 locals | Object | to set any additional data 
 http | NodeJS.IncomingMessage | 
-
-### Response
-
-**PMS** http response holds the original Node Server Response with a couple of methods.
-
-Name | Type | Description
---- | --- | ---
-json | (data?: any) => void | Used to send json data.
-status | (code: number) => Response | Used to set response status code.
-end | any | Overwrites orignal end method *recommended to use*
-http | NodeJS.ServerResponse | 
-
-**Response** will log any 500 family errors automatically.
 
 ### Request Path Patterns
 
@@ -189,6 +203,62 @@ http | NodeJS.ServerResponse |
 - Parameters with Regexp can be optional as will */articles/{id:[a-z]{10}**:i**}?*
 - Parameters can be seperated by fixed value blocks */articles/{aid}/comments/{cid}*
 - Parameters and rest operator can be seperated by fixed value blocks as well.
+- On each request, routes are checked in two steps to enhance performance
+  - Perfect match: Looks for the perfect match (case sensetive).
+  - By Order: if first step fail, then routes are checked by order they were defined (case insensetive)
+
+```ts
+@SERVICE()
+class AticlesQuery {
+  // first to check
+  @ROUTE({ path: '/{id}'})
+  getById() {}
+  
+  // second to check
+  @ROUTE({ path: '/published' })
+  getPublished() {}
+  
+  /**
+   * Later when an incomimg reauest made including pathname as: 'articles-query/v0/Published' with capitalized P
+   * first route to match is '/{id}',
+   * However when the path name is 'articles-query/v0/published' with lowercased p '/published' as the defined route then
+   * the first route to match is '/published' instead of '/{id}'
+   */
+}
+```
+
+### Response
+
+**PMS** http response holds the original Node Server Response with a couple of methods.
+
+Name | Type | Description
+--- | --- | ---
+json | (data?: any) => void | Used to send json data.
+status | (code: number) => Response | Used to set response status code.
+type | (contentType: string) => void | assign content-type response header value.
+end | any | Overwrites orignal end method *recommended to use*
+setHeader | (headers: { [key: string]: string \| string[] \| number }) => void | set multiple headers at once
+http | NodeJS.ServerResponse | 
+
+Using response.json() will set 'content-type' response header to 'application/json'.
+**Response** will log any 500 family errors automatically.
+
+#### Response Security headers
+
+**PM** add additional response headers fro more secure environment as follows:
+
+```
+'Cache-Control': 'no-cache,no-store,max-age=0,must-revalidate'
+'Pragma': 'no-cache'
+'Expires': '-1'
+'X-XSS-Protection': '1;mode=block'
+'X-Frame-Options': 'DENY'
+'Content-Security-Policy': "script-src 'self'"
+'X-Content-Type-Options': 'nosniff'
+```
+
+
+Headers can be overwritten using **response.setHeaders** method, 
 
 
 ## SUBJECT DECORATOR
@@ -713,21 +783,21 @@ class Publisher {
 
 # Health Check
 
-For health check in Dockerfile and docker-compose
+For health check in Dockerfile or docker-compose
 
 ```Dockerfile
-HEALTHCHECK --interval=30s CMD node ./node_modules/@pestras/microservice/hc.js 3000
+HEALTHCHECK --interval=30s CMD node ./node_modules/@pestras/microservice/hc.js /articles/v0 3000
 ```
 
 ```yml
 healthcheck:
-  test: ["CMD", "node", "./node_modules/@pestras/microservice/hc.js", "3000"]
+  test: ["CMD", "node", "./node_modules/@pestras/microservice/hc.js", "/articles/v0", "3000"]
   interval: 1m30s
   timeout: 10s
   retries: 3
   start_period: 40s
 ```
-
+Root path is required as the first parameter.
 Port defaults to 3000 it is optional.
 
 Thank you

@@ -1,7 +1,7 @@
 version: '2.4'
 services: 
-  servicename:
-    containerName: service-name
+  service-name:
+    container_name: service-name
     labels:
       key: "value"
     build: 

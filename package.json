@@ -1,18 +1,26 @@
 {
-  "name": "microservice-name",
-  "version": "0.2.0",
-  "description": "microservice desc",
+  "name": "service-name",
+  "version": "0.2.3",
+  "description": "service desc",
   "main": "index.js",
   "scripts": {
-    "tsc": "tsc"
+    "tsc": "tsc",
+    "build": "tsc && docker build --target prod --build-args NPM_TOKEN=npm-token -t account/service-name:version .",
+    "up": "tsc && docker-compose up -d",
+    "up:build": "tsc && docker-compose up -d --build",
+    "down": "docker-compose down -v"
   },
   "keywords": [
     "microservice"
   ],
   "author": "author",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pestras/pestras-microservice-template.git"
+  },
   "dependencies": {
-    "@pestras/microservice": "0.2.0"
+    "@pestras/microservice": "0.2.3"
   },
   "devDependencies": {
     "typescript": "3.8.2"

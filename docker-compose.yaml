@@ -1,15 +1,22 @@
-version: '2.4'
+version: '3.8'
 services: 
   service-name:
     container_name: service-name
     labels:
-      - "value"
+      - "label"
+    env_file:
+      - env.env
     build: 
       context: .
       target: dev
       args: 
         - "NPM_TOKEN=npm-token"
         - "PORT=3000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "3"
     # to expose service port uncomment the two following lines
     # ports:
     #   - "3000:3000"

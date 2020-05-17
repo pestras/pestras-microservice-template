@@ -1,6 +1,6 @@
 {
   "name": "service-name",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "service desc",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "url": "https://github.com/pestras/pestras-microservice-template.git"
   },
   "dependencies": {
-    "@pestras/microservice": "0.2.3"
+    "@pestras/microservice": "0.3.0"
   },
   "devDependencies": {
     "typescript": "3.8.2"

@@ -286,41 +286,72 @@ Hooks should handle the response on failure and returning or resolving to false,
 
 ## SUBJECT DECORATOR
 
-Used to subscribe to nats server pulished subjects, and also accepts a config object.
+Used to subscribe to nats server pulished subjects, and also accepts a subject string as a first argument and an optional config object.
 
 Name | Type | Required | Default | Description
 --- | --- | --- | --- | ---
-subject | string | true | - | Nats server subject pattern
-validate | (nats: Nats.Client, msg: NatsMsg<T>) => boolean \| Promise\<boolean\> | null | validation method
+hooks | string[] | [] | hooks methods that should be called before the route handler
 dataQuota | number | false | 1024 * 100 | Subject msg data size limit
 payload | Nats.Payload | false | Payload.JSON | see [Nats Docs](https://docs.nats.io/)
 options | Nats.SubscriptionOptions | false | null | see [Nats Docs](https://docs.nats.io/)
-auth | (nats: Nats.Client, msg: NatsMsg<T>) => boolean \| Promise\<boolean\> | false | null | auth method
 
 ```ts
-import { SERVICE, SUBJECT } from '@pestras/microservice';
+import { SERVICE, SUBJECT, NatsMsg } from '@pestras/microservice';
+import { Client, Payload} from 'ts-nats';
 
 @SERVICE({
   version: 1,
   port: 3334,
-  workers: 4
+  nats: { url: 'http://localhost:4222', payload: Payload.JSON }
 })
 class Email {
 
-  @SUBJECT({
-    subject: 'user.insert',
-    auth: async function (this: Email, nats: Nats.Client, msg: Nats.Msg) {
-      //  some authorization
-    },
+  // hooks works with subjects as well
+  // arguments are swaped with (nats: Nats.Client, msg: Nats.Msg, handlerName: string - name of the subject handler method that called the hook)
+  @Hook(5000)
+  async auth(nats: Client, msg: NatsMsg, handlerName: string) {
+    // if hook failed its purpose should return false and check for msg reply if exists
+    if (msg.reply) nats.publish(msg.replay, { error: 'some error' })
+    return false
+
+    // otherwise
+    return true;
+  }
+
+  @SUBJECT('user.insert', {
+    hooks: ['auth'],
     options: { queue: 'emailServiceWorker' }
   })
-  sendActivationEmail(nats: Nats.Client, msg: Nats.Msg) {
+  sendActivationEmail(nats: Client, msg: NatsMsg) {
     let auth = msg.data.auth;
   }
 ```
 
-*Note: Both validation and auth methods context is changed to the service instance
-but we need to inform typescript by defining the type of 'this' to the service class name.*
+Hooks must return or resolve (async) to true on success or false on failure.
+
+### Multible Subjects
+
+Multible subjects can be used on the same handler.
+
+```ts
+import { SERVICE, SUBJECT, NatsMsg } from '@pestras/microservice';
+import { Client, Payload} from 'ts-nats';
+
+interface MsgInput { id: string; email: string }
+
+@SERVICE({
+  version: 1,
+  nats: { url: 'http://localhost:4222', payload: Payload.JSON }
+})
+class Email {
+
+  @SUBJECT('emails.new')
+  @SUBJECT('emails.reactivate')
+  sendActivataionEmail(client: Client, msg: NatsMsg<MsgInput>) {
+    // send email
+  }
+}
+```
 
 # SocketIO
 

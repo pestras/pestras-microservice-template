@@ -1,4 +1,4 @@
-import { SERVICE, MICRO, ServiceEvents } from '@pestras/microservice';
+import { SERVICE, Micro, ServiceEvents } from '@pestras/microservice';
 import { LOGLEVEL } from '@pestras/microservice/logger';
 import { Payload } from 'ts-nats';
 
@@ -16,4 +16,4 @@ export class Service implements ServiceEvents {
 
 }
 
-MICRO.start(Service);
+Micro.start(Service);

@@ -7,7 +7,7 @@ const NATS = process.env.NATS;
 @SERVICE({
   version: 0,
   logLevel: PROD ? LOGLEVEL.WARN : LOGLEVEL.DEBUG,
-  nats: NATS ? { url: NATS, payload: Payload.JSON} : null
+  nats: NATS ? { url: NATS, payload: Payload.JSON } : null
 })
 export class Service implements ServiceEvents {
 

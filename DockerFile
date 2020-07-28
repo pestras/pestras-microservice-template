@@ -34,7 +34,7 @@ ENV PATH /opt/node_app/node_modules/.bin:$PATH
 RUN rm -f .npmrc
 
 # check every 30s to ensure this service returns HTTP 200
-HEALTHCHECK --interval=1m30s --timeout=3s --start-period=30s CMD node ./node_modules/@pestras/microservice/hc.js /service-name/v0 3000
+HEALTHCHECK --interval=1m30s --timeout=3s --start-period=30s CMD node ../node_modules/@pestras/microservice/hc.js /service-name/v0 3000
 
 # Stage 2 (development)
 # No copying in this stage instead using bind mount in docker-compose
@@ -59,5 +59,7 @@ FROM base AS prod
 
 # App directory
 WORKDIR /opt/node_app/app
+
+COPY . .
 
 CMD ["node", "index.js"]

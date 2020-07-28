@@ -5,4 +5,4 @@ npm-debug
 *.ts
 *.js.map
 test
-tsconfig
+tsconfig.ts

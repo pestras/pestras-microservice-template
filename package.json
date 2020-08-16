@@ -20,7 +20,7 @@
     "url": "https://github.com/pestras/pestras-microservice-template.git"
   },
   "dependencies": {
-    "@pestras/microservice": "0.5.6"
+    "@pestras/microservice": "0.6.0"
   },
   "devDependencies": {
     "typescript": "3.8.2"
